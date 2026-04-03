@@ -1,0 +1,8 @@
+{
+  "name": "embedded-checkout-sample",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "sh ./scripts/start.sh"
+  }
+}

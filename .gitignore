@@ -1,0 +1,4 @@
+docker/Caddyfile.docker.auto
+certs/*.pem
+certs/.generated-for-host
+.env

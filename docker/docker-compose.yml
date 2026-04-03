@@ -1,0 +1,26 @@
+services:
+  checkout-sample:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../src/web:/app/src/web
+      - ../src/server.ts:/app/src/server.ts
+      - ../package.json:/app/package.json
+    env_file:
+      - ../.env
+    environment:
+      - PORT=8000
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      - checkout-sample
+    ports:
+      - "443:443"
+    volumes:
+      - ./Caddyfile.docker.auto:/etc/caddy/Caddyfile:ro
+      - ../certs/cert.pem:/etc/caddy/cert.pem:ro
+      - ../certs/key.pem:/etc/caddy/key.pem:ro
