@@ -4,13 +4,14 @@
 import { join } from "node:path";
 import { serveStaticFile, tlsFromEnv } from "./utils/static-serve";
 
+/** North Checkout API + script host (production). */
+const NORTH_CHECKOUT_BASE = "https://checkout.north.com";
+
 const webRoot = join(import.meta.dir, "web");
 const port = Number(process.env.PORT) || 8000;
 const tls = tlsFromEnv();
 
 async function handleSession(req: Request): Promise<Response> {
-  const apiBase =
-    process.env.API_URL || process.env.API_BASE_URL || "";
   const privateKey = process.env.PRIVATE_API_KEY || "";
   const checkoutId =
     process.env.CHECKOUT_ID ||
@@ -18,12 +19,6 @@ async function handleSession(req: Request): Promise<Response> {
   const profileId =
     process.env.PROFILE_ID || "dd5eee52-cd36-4a02-8aa1-742bfc316974";
 
-  if (!apiBase) {
-    return Response.json(
-      { error: "API_URL is not set in .env" },
-      { status: 500, headers: { "Cache-Control": "no-store" } },
-    );
-  }
   if (!privateKey) {
     return Response.json(
       { error: "PRIVATE_API_KEY is not set in .env" },
@@ -50,7 +45,7 @@ async function handleSession(req: Request): Promise<Response> {
     products,
   });
 
-  const url = `${apiBase.replace(/\/$/, "")}/api/sessions`;
+  const url = `${NORTH_CHECKOUT_BASE.replace(/\/$/, "")}/api/sessions`;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 60_000);
 

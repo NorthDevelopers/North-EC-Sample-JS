@@ -15,7 +15,7 @@ North **form** checkout in the browser. The sample app runs in **Docker** (Bun +
 
 1. Install **Docker** (with Compose v2 — the `docker compose` plugin).
 
-2. **`.env`** lives in the **project root** (same folder as this README). Create it if missing, or edit the one you already have. Set `API_URL`, `PRIVATE_API_KEY`, and `HOST` (comma-separated hostnames, e.g. `www.test.com,test.com`), `CHECKOUT_ID`, and `PROFILE_ID`.
+2. **`.env`** lives in the **project root** (same folder as this README). Create it if missing, or edit the one you already have. Set `PRIVATE_API_KEY`, and `HOST` (comma-separated hostnames, e.g. `www.test.com,test.com`), `CHECKOUT_ID`, and `PROFILE_ID`.
 
 3. Run:
 
