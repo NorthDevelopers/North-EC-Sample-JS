@@ -1,7 +1,6 @@
 docker/Caddyfile.docker.auto
 certs/*.pem
 certs/.generated-for-host
-.env
 .env_*
 node_modules/
 package-lock.json
