@@ -35,13 +35,15 @@ export async function serveStaticFile(
   const candidate = underWebRoot(webRoot, join(webRoot, rel));
   if (!candidate) return new Response("Not found", { status: 404 });
 
-  let file = Bun.file(candidate);
+  let resolvedPath = candidate;
+  let file = Bun.file(resolvedPath);
   if (!(await file.exists())) {
     const dir = join(webRoot, rel);
     const idx = join(dir, "index.html");
     const idxNorm = underWebRoot(webRoot, idx);
     if (idxNorm && (await Bun.file(idxNorm).exists())) {
-      file = Bun.file(idxNorm);
+      resolvedPath = idxNorm;
+      file = Bun.file(resolvedPath);
     } else {
       return new Response("Not found", { status: 404 });
     }
@@ -50,7 +52,7 @@ export async function serveStaticFile(
   return new Response(file, {
     headers: {
       ...noCacheHeaders,
-      "Content-Type": contentType(candidate),
+      "Content-Type": contentType(resolvedPath),
     },
   });
 }

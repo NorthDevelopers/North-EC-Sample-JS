@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Embedded Checkout (Direct Post)</title>
+    <link rel="stylesheet" href="/assets/session-meta.css" />
+    <style>
+      body {
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+          Arial;
+        padding: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      label {
+        display: block;
+        margin-top: 10px;
+      }
+      input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        margin-top: 6px;
+        box-sizing: border-box;
+      }
+      button {
+        margin-top: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid #111;
+        background: #111;
+        color: #fff;
+        cursor: pointer;
+      }
+      pre {
+        margin-top: 16px;
+        background: #0b1020;
+        color: #e6e9f5;
+        padding: 16px;
+        border-radius: 10px;
+        overflow: auto;
+      }
+      .warn {
+        color: #9a1b1b;
+      }
+    </style>
+
+    <!-- Step 2: Add the Checkout Script (Direct Post Integration Guide) -->
+    <script src="https://checkout.north.com/checkout.js"></script>
+  </head>
+  <body class="session-with-request-badge">
+    <div id="session-request-id" aria-live="polite">Request ID (support): …</div>
+    <h2>Direct Post integration</h2>
+    <p class="warn">
+      This sample collects raw card data in the browser (higher PCI scope). Use only for testing.
+    </p>
+
+    <!-- Step 3: Build Your Payment Form -->
+    <form id="f">
+      <label
+        >Amount
+        <input name="amount" inputmode="decimal" value="1.00" />
+      </label>
+      <label
+        >Card number
+        <input name="cardNumber" autocomplete="cc-number" value="4111111111111111" />
+      </label>
+      <label
+        >Expiry (MMYY)
+        <input name="exp" autocomplete="cc-exp" value="1230" />
+      </label>
+      <label
+        >CVV
+        <input name="cvv" autocomplete="cc-csc" value="123" />
+      </label>
+      <label
+        >ZIP
+        <input name="zip" autocomplete="postal-code" value="12345" />
+      </label>
+      <button type="submit">Pay</button>
+    </form>
+
+    <pre id="out"></pre>
+
+    <script src="/assets/session-ui.js"></script>
+    <script src="/assets/helpers.js"></script>
+    <script src="./post.js"></script>
+  </body>
+</html>
+

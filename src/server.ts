@@ -1,23 +1,38 @@
 /**
- * Bun dev server: static files from src/web + POST /api/session (North token).
+ * North Embedded Checkout — server-side guide steps implemented here:
+ *
+ * - Step 1: Create a Checkout Session → `POST /api/session` (`createSession`)
+ * - Step 5: Verify payment completion (session status) → inside `confirmPayment` (`POST /api/complete`; do not call North from browser JS)
  */
 import { join } from "node:path";
 import { serveStaticFile, tlsFromEnv } from "./utils/static-serve";
-
-/** North Checkout API + script host (production). */
-const NORTH_CHECKOUT_BASE = "https://checkout.north.com";
+import {
+  NORTH_CHECKOUT_BASE,
+  checkoutTypeFromEnv,
+  northSessionsBasePath,
+  jsonNoStore,
+  redact,
+} from "./utils/server-utils";
 
 const webRoot = join(import.meta.dir, "web");
 const port = Number(process.env.PORT) || 8000;
 const tls = tlsFromEnv();
 
-async function handleSession(req: Request): Promise<Response> {
+/**
+ * Step 1 — Create a Checkout Session
+ *
+ * `POST /api/session` — browser calls this; server calls North with `PRIVATE_API_KEY`.
+ *
+ * Guides:
+ * - https://developer.north.com/products/online/embedded-checkout/form-integration-guide
+ * - https://developer.north.com/products/online/embedded-checkout/fields-integration-guide
+ * - https://developer.north.com/products/online/embedded-checkout/post-integration-guide
+ */
+async function createSession(req: Request): Promise<Response> {
   const privateKey = process.env.PRIVATE_API_KEY || "";
-  const checkoutId =
-    process.env.CHECKOUT_ID ||
-    "784eb47c-17cd-4c3e-a0b4-e23055d03841";
-  const profileId =
-    process.env.PROFILE_ID || "dd5eee52-cd36-4a02-8aa1-742bfc316974";
+  const checkoutId = process.env.CHECKOUT_ID || "";
+  const profileId = process.env.PROFILE_ID || "";
+  const checkoutType = checkoutTypeFromEnv();
 
   if (!privateKey) {
     return Response.json(
@@ -25,33 +40,43 @@ async function handleSession(req: Request): Promise<Response> {
       { status: 500, headers: { "Cache-Control": "no-store" } },
     );
   }
+  if (!checkoutId) {
+    return Response.json(
+      { error: "CHECKOUT_ID is not set in .env" },
+      { status: 500, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+  if (!profileId) {
+    return Response.json(
+      { error: "PROFILE_ID is not set in .env" },
+      { status: 500, headers: { "Cache-Control": "no-store" } },
+    );
+  }
 
-  let body: { amount?: number; products?: unknown };
+  let body: { amount?: number; products?: unknown } = {};
   try {
     body = (await req.json()) as { amount?: number; products?: unknown };
   } catch {
-    return Response.json(
-      { error: "Invalid JSON body" },
-      { status: 400, headers: { "Cache-Control": "no-store" } },
-    );
+    // allow empty JSON body (e.g., direct post sessions may not require amount/products)
   }
 
   const amount = body.amount ?? 0;
   const products = body.products ?? [];
-  const northBody = JSON.stringify({
-    checkoutId,
-    profileId,
-    amount,
-    products,
-  });
+  // Form/Fields typically send amount and/or products; Direct Post may omit products (amount also
+  // supplied at payment time). This demo still sends amount on the session for all types.
+  const northBody = JSON.stringify(
+    checkoutType === "post"
+      ? { checkoutId, profileId, amount }
+      : { checkoutId, profileId, amount, products },
+  );
 
-  const url = `${NORTH_CHECKOUT_BASE.replace(/\/$/, "")}/api/sessions`;
+  const sessionUrl = `${NORTH_CHECKOUT_BASE.replace(/\/$/, "")}${northSessionsBasePath(checkoutType)}`;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 60_000);
 
   let northRes: Response;
   try {
-    northRes = await fetch(url, {
+    northRes = await fetch(sessionUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -104,14 +129,102 @@ async function handleSession(req: Request): Promise<Response> {
 
   try {
     const json = JSON.parse(text) as { token?: string };
-    if (json.token) {
-      console.log("[api/session] session token:", json.token);
-    }
+    void json;
   } catch {
     /* ignore */
   }
 
   return new Response(text, { status: 200, headers });
+}
+
+/**
+ * Step 5 — Confirm payment (sample: `POST /api/complete` for `/complete/` page)
+ *
+ * Calls North’s session **status** endpoint for authoritative Approved/Declined (do not call that
+ * URL from browser JS). Optionally logs a redacted copy of the client-side payment result for
+ * debugging (do not trust it for fulfillment).
+ *
+ * Guides (Method 1: session status):
+ * - https://developer.north.com/products/online/embedded-checkout/form-integration-guide
+ * - https://developer.north.com/products/online/embedded-checkout/fields-integration-guide
+ * - https://developer.north.com/products/online/embedded-checkout/post-integration-guide
+ */
+async function confirmPayment(req: Request): Promise<Response> {
+  const privateKey = process.env.PRIVATE_API_KEY || "";
+  const checkoutId = process.env.CHECKOUT_ID || "";
+  const profileId = process.env.PROFILE_ID || "";
+  const checkoutType = checkoutTypeFromEnv();
+
+  if (!privateKey) return jsonNoStore({ error: "PRIVATE_API_KEY is not set in .env" }, 500);
+  if (!checkoutId) return jsonNoStore({ error: "CHECKOUT_ID is not set in .env" }, 500);
+  if (!profileId) return jsonNoStore({ error: "PROFILE_ID is not set in .env" }, 500);
+
+  let body: { token?: string; clientResponse?: unknown };
+  try {
+    body = (await req.json()) as { token?: string; clientResponse?: unknown };
+  } catch {
+    return jsonNoStore({ error: "Invalid JSON body" }, 400);
+  }
+
+  const token = (body.token || "").trim();
+  if (!token) return jsonNoStore({ error: "Missing session token" }, 400);
+
+  const redactedClient = redact(body.clientResponse);
+  console.log("[checkout/complete] clientResponse:", JSON.stringify(redactedClient));
+
+  let verified: { ok: boolean; status: number; body?: unknown; raw?: string };
+  try {
+    const statusUrl = `${NORTH_CHECKOUT_BASE.replace(/\/$/, "")}${northSessionsBasePath(checkoutType)}/status`;
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 60_000);
+    let northRes: Response;
+    let statusText: string;
+    try {
+      northRes = await fetch(statusUrl, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${privateKey}`,
+          SessionToken: token,
+          CheckoutId: checkoutId,
+          ProfileId: profileId,
+        },
+        signal: ctrl.signal,
+      });
+      statusText = await northRes.text();
+    } finally {
+      clearTimeout(t);
+    }
+
+    if (!northRes.ok) {
+      verified = { ok: false, status: northRes.status, raw: statusText.slice(0, 2000) };
+    } else {
+      try {
+        verified = { ok: true, status: northRes.status, body: JSON.parse(statusText) };
+      } catch {
+        verified = { ok: true, status: northRes.status, raw: statusText.slice(0, 2000) };
+      }
+    }
+  } catch (e) {
+    const msg =
+      e instanceof Error && e.name === "AbortError"
+        ? "North API request timed out"
+        : e instanceof Error
+          ? e.message
+          : "Network error calling North";
+    verified = { ok: false, status: 502, raw: msg };
+  }
+
+  console.log("[checkout/complete] verified:", JSON.stringify(redact(verified)));
+
+  return jsonNoStore(
+    {
+      received: {
+        clientResponse: redactedClient,
+      },
+      verified,
+    },
+    200,
+  );
 }
 
 Bun.serve({
@@ -120,7 +233,10 @@ Bun.serve({
   async fetch(req) {
     const url = new URL(req.url);
     if (url.pathname === "/api/session" && req.method === "POST") {
-      return handleSession(req);
+      return createSession(req);
+    }
+    if (url.pathname === "/api/complete" && req.method === "POST") {
+      return confirmPayment(req);
     }
     return serveStaticFile(webRoot, url.pathname);
   },

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Embedded Checkout (Form)</title>
+    <link rel="stylesheet" href="/assets/session-meta.css" />
+    <style>
+      body {
+        padding: 20px;
+      }
+      #checkout-container {
+        height: 100vh;
+      }
+    </style>
+
+    <!-- Step 2: Add the Checkout Script (Form Integration Guide) -->
+    <script src="https://checkout.north.com/checkout.js"></script>
+  </head>
+
+  <body class="session-with-request-badge">
+    <div id="session-request-id" aria-live="polite">Request ID (support): …</div>
+    <div id="checkout-container"></div>
+
+    <script src="/assets/session-ui.js"></script>
+    <script src="/assets/helpers.js"></script>
+    <script src="./form.js"></script>
+  </body>
+</html>
+

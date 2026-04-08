@@ -1,5 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Embedded Checkout Samples</title>
+    <style>
+      body {
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+          Arial;
+        padding: 24px;
+        max-width: 920px;
+        margin: 0 auto;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 14px;
+        padding: 16px;
+      }
+      .card h3 {
+        margin: 0 0 8px 0;
+      }
+      .card p {
+        margin: 0 0 12px 0;
+        color: #333;
+      }
+      a.btn {
+        display: inline-block;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid #111;
+        background: #111;
+        color: #fff;
+        text-decoration: none;
+      }
+      .muted {
+        color: #555;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>North Embedded Checkout samples</h2>
+    <p class="muted">
+      Pick the integration method you want to review. Each method is in its own folder with
+      step-labeled code that follows the guide.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Embedded Checkout Form</h3>
+        <p>Prebuilt hosted form mounted into your page.</p>
+        <a class="btn" href="/form/">Open Form sample</a>
+      </div>
+      <div class="card">
+        <h3>Embedded Checkout Fields</h3>
+        <p>Hosted fields mounted into your custom layout; you control the submit button.</p>
+        <a class="btn" href="/fields/">Open Fields sample</a>
+      </div>
+      <div class="card">
+        <h3>Direct Post</h3>
+        <p>
+          Fully custom payment form that submits raw card data (higher PCI scope; test only).
+        </p>
+        <a class="btn" href="/post/">Open Direct Post sample</a>
+      </div>
+    </div>
+
+    <p class="muted" style="margin-top: 16px">
+      Completion/verification page: <code>/complete/</code>
+    </p>
+  </body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,12 +93,9 @@
       height: 100vh;
     }
   </style>
-  <!-- Step 2: Include checkout.js -->
-  <script src="https://checkout.north.com/checkout.js"></script>
 </head>
 <body>
-  <!-- Step 2: Add checkout container -->
-  <div id="checkout-container"></div>
-  <script src="mount.js"></script>
+  <div id="app">Loading…</div>
+  <script src="router.js"></script>
 </body>
 </html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout Complete</title>
+    <link rel="stylesheet" href="/assets/session-meta.css" />
+    <style>
+      body {
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+          Arial;
+        padding: 24px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      pre {
+        background: #0b1020;
+        color: #e6e9f5;
+        padding: 16px;
+        border-radius: 10px;
+        overflow: auto;
+      }
+      .muted {
+        color: #555;
+      }
+    </style>
+  </head>
+  <body class="session-with-request-badge">
+    <div id="session-request-id" aria-live="polite">Request ID (support): …</div>
+    <h2>Checkout completion</h2>
+    <p class="muted">
+      This page sends the client result to the server via <code>/api/complete</code>, which logs it
+      and verifies status with North.
+    </p>
+    <div id="state">Verifying…</div>
+    <pre id="out"></pre>
+    <script src="/assets/session-ui.js"></script>
+    <script src="./complete.js"></script>
+  </body>
+</html>
+
