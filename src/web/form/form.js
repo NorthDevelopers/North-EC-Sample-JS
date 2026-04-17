@@ -27,6 +27,29 @@ async function mountCheckoutForm() {
       );
     }
 
+    let redirectedToComplete = false;
+    const redirectToComplete = (data, { delayMs = 0 } = {}) => {
+      if (redirectedToComplete) return;
+      redirectedToComplete = true;
+
+      if (typeof data !== "undefined") {
+        try {
+          sessionStorage.setItem("north_client_response", JSON.stringify(data));
+        } catch {
+          // ignore
+        }
+      }
+
+      if (delayMs > 0) {
+        setTimeout(() => {
+          location.href = "/complete/";
+        }, delayMs);
+        return;
+      }
+
+      location.href = "/complete/";
+    };
+
     // Step 1 (client -> server): Create a Checkout Session
     const response = await fetch("/api/session", {
       method: "POST",
@@ -74,6 +97,14 @@ async function mountCheckoutForm() {
       sessionStorage.setItem("north_session_token", sessionToken);
     } catch {
       // ignore (Safari private mode, etc.)
+    }
+
+    // Fires when the embedded checkout's confirmation page is shown.
+    // Wait 5 seconds, then verify server-side via `/complete/`.
+    if (typeof checkout.onPaymentComplete === "function") {
+      checkout.onPaymentComplete((paymentCompleteData) => {
+        redirectToComplete(paymentCompleteData, { delayMs: 5_000 });
+      });
     }
 
     // Optional sanity check (common cause of checkout.mount hanging)

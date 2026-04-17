@@ -28,7 +28,10 @@ The [Form](https://developer.north.com/products/online/embedded-checkout/form-in
 
 1. Install **Docker** (with Compose v2 — the `docker compose` plugin).
 
-2. **`.env`** lives in the **project root** (same folder as this README). Create it if missing, or edit the one you already have. Set `PRIVATE_API_KEY`, and `HOST` (comma-separated hostnames, e.g. `www.test.com,test.com`), `CHECKOUT_ID`, `PROFILE_ID`, and `CHECKOUT_TYPE` (`form`, `fields`, or `post`). There are **no default IDs** in the server — they must be provided per account.
+2. **`.env`** lives in the **project root** (same folder as this README). Create it if missing, or edit the one you already have. Set `PRIVATE_API_KEY`, `CHECKOUT_ID`, `PROFILE_ID`, and `CHECKOUT_TYPE` (`form`, `fields`, or `post`). There are **no default IDs** in the server — they must be provided per account.
+   
+   - To run with **HTTP-only** (default): keep `ENABLE_HTTPS=0` and use `http://127.0.0.1:8000`.
+   - To run with **local HTTPS**: set `ENABLE_HTTPS=1` and set `HOST` (comma-separated hostnames, e.g. `www.test.com,test.com`).
 
 3. Run:
 
@@ -37,16 +40,20 @@ chmod +x scripts/start.sh scripts/setup-hosts.sh scripts/ensure-certs.sh
 ./scripts/start.sh
 ```
 
-`./scripts/start.sh` updates **`/etc/hosts`** when needed (may ask for sudo), generates **`certs/cert.pem`** and **`certs/key.pem`** for every name in `HOST` (prefers **[mkcert](https://github.com/FiloSottile/mkcert)** if installed — runs **`mkcert -install`** so your OS/browser trusts the local CA; otherwise falls back to **openssl** self-signed, which may show a browser warning until you install mkcert or trust the cert yourself). It writes **`docker/Caddyfile.docker.auto`**, then starts the app plus HTTPS on **443**. If you change `HOST` later, certs are regenerated automatically; to use your own PEMs instead, place them in **`certs/`** and remove **`certs/.generated-for-host`** so the script does not overwrite them.
+`./scripts/start.sh` always starts the app on **`http://127.0.0.1:8000`**.
 
-4. Open **`https://<first-host-in-HOST>/`** (e.g. `https://www.test.com/`). The landing page links to each integration method. The app also listens on **`http://127.0.0.1:8000`** for direct access (e.g. debugging).
+If `ENABLE_HTTPS=1`, it also updates **`/etc/hosts`** when needed (may ask for sudo), generates **`certs/cert.pem`** and **`certs/key.pem`** for every name in `HOST` (prefers **[mkcert](https://github.com/FiloSottile/mkcert)** if installed — runs **`mkcert -install`** so your OS/browser trusts the local CA; otherwise falls back to **openssl** self-signed, which may show a browser warning until you install mkcert or trust the cert yourself). It writes **`docker/Caddyfile.docker.auto`**, then starts Caddy with HTTPS on **443**. If you change `HOST` later, certs are regenerated automatically; to use your own PEMs instead, place them in **`certs/`** and remove **`certs/.generated-for-host`** so the script does not overwrite them.
+
+4. Open **`http://127.0.0.1:8000/`**. The landing page links to each integration method.
+   
+   If you enabled HTTPS (`ENABLE_HTTPS=1`), you can also open **`https://<first-host-in-HOST>/`** (e.g. `https://www.test.com/`).
 
 ### Sample routes (one folder per method)
 
-- **Form**: `https://<host>/form/`
-- **Fields**: `https://<host>/fields/`
-- **Direct Post**: `https://<host>/post/`
-- **Completion (server-verified)**: `https://<host>/complete/`
+- **Form**: `http://127.0.0.1:8000/form/` (or `https://<host>/form/` with `ENABLE_HTTPS=1`)
+- **Fields**: `http://127.0.0.1:8000/fields/` (or `https://<host>/fields/` with `ENABLE_HTTPS=1`)
+- **Direct Post**: `http://127.0.0.1:8000/post/` (or `https://<host>/post/` with `ENABLE_HTTPS=1`)
+- **Completion (server-verified)**: `http://127.0.0.1:8000/complete/` (or `https://<host>/complete/` with `ENABLE_HTTPS=1`)
 
 The landing page `/` links to each method so developers can jump straight to the integration they care about.
 

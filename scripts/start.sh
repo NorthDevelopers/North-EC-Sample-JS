@@ -1,5 +1,5 @@
 #!/bin/sh
-# Docker-only: /etc/hosts from HOST in .env, then docker compose (app + Caddy on :443).
+# Docker-only: starts the app on :8000; optionally enables HTTPS (Caddy on :443) when ENABLE_HTTPS=1.
 
 set -e
 
@@ -10,6 +10,14 @@ cd "$ROOT" || exit 1
 . "$SCRIPT_DIR/dotenv.sh"
 dotenv_load "$ROOT/.env"
 
+# Truthy env helper (1/true/yes/on).
+is_truthy() {
+  case "$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 # Do not name this "dc" — that shadows /usr/bin/dc (desk calculator) with `exec`.
 run_compose() {
   if docker compose version >/dev/null 2>&1; then
@@ -19,12 +27,18 @@ run_compose() {
   fi
 }
 
-"$SCRIPT_DIR/setup-hosts.sh"
-"$SCRIPT_DIR/ensure-certs.sh"
-
 compose_run() {
   (cd "$ROOT/docker" && run_compose "$@")
 }
+
+if ! is_truthy "${ENABLE_HTTPS:-0}"; then
+  echo "Starting app (HTTP-only) — http://127.0.0.1:8000/" >&2
+  compose_run up --build checkout-sample
+  exit 0
+fi
+
+"$SCRIPT_DIR/setup-hosts.sh"
+"$SCRIPT_DIR/ensure-certs.sh"
 
 HOST="${HOST:-www.test.com,test.com}"
 _host_list=$(printf '%s' "$HOST" | tr ',' ' ' | tr -s '[:space:]' ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
