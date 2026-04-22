@@ -1,6 +1,27 @@
-# Embedded Checkout Sample
+# Accept Payments with North Embedded Checkout
 
-North Embedded Checkout sample that supports **Form**, **Fields**, and **Direct Post** modes. The app runs in **Docker** (Bun + static assets under `src/web/`); **`POST /api/session`** creates a North session using `.env`, and **`POST /api/complete`** runs server-side payment verification for the sample `/complete/` page.
+[North Embedded Checkout](https://developer.north.com/products/online/embedded-checkout) supports three integration types—[Form](https://developer.north.com/products/online/embedded-checkout/form-integration-guide), [Fields](https://developer.north.com/products/online/embedded-checkout/fields-integration-guide), and [Direct Post](https://developer.north.com/products/online/embedded-checkout/post-integration-guide)—that allow you to balance speed of implementation, control over the UI, and PCI scope based on your business needs. See the [comparison table](https://developer.north.com/products/online/embedded-checkout#integration-types) for a side-by-side summary of the flexibility, PCI scope, and implementation effort.
+
+The overall integration path is the same across each integration type. You configure a checkout in the [Embedded Checkout Designer](/dashboard/embedded-checkouts/designer), store your private API Key, Checkout ID, and Profile ID from the [Embedded Checkout dashboard](/dashboard/embedded-checkouts), and create short-lived checkout sessions from your server.
+
+<img width="500" height="250" alt="blog-embedded-checkout-comparison-body" src="https://github.com/user-attachments/assets/c5b958b5-7f76-47a3-8cf2-716773bb5429" />
+
+
+## What You'll Build
+
+This sample code enables you to quickly integrate **North Embedded Checkout** with your app, whether you in three modes—**Form**, **Fields**, and **Direct Post**—using a small **Docker** stack (Bun serves the API and static assets under `src/web/`). The server exposes **`POST /api/session`** to create a North session from your `.env` credentials and **`POST /api/complete`** for server-side payment verification on the sample `/complete/` page.
+
+Building a payment flow from scratch means handling validation, errors, and security boundaries. This repo focuses on the **server-side** pieces every guide shares, plus minimal browser pages so you can see each mode end-to-end.
+
+<img width="1326" height="875" alt="blog-ec-tutorial-2" src="https://github.com/user-attachments/assets/3335546c-cabe-45f5-bcdc-087ca9421eee" />
+
+
+## Features
+
+- **Three integration modes** — Form, Fields, and Direct Post, each with its own route under `src/web/`.
+- **Shared server flow** — Create session and verify completion in one Bun app.
+- **Docker-first** — Compose, Caddy for optional HTTPS, scripts for certs and hosts.
+- **Developer-oriented** — Landing page links to each mode; comments in `*.js` / `index.html` tie steps to the guides.
 
 ## Where each guide step lives
 
@@ -15,53 +36,47 @@ The [Form](https://developer.north.com/products/online/embedded-checkout/form-in
 | **Shared browser helpers** | Request ID badge, digit cleanup, origin warning | `src/web/assets/` (`session-ui.js`, `helpers.js`, `session-meta.css`) |
 | **Shared server helpers** | Env, JSON helpers, redaction for logs | `src/utils/server-utils.ts` |
 
-## Layout
+## How to run locally
 
-| Path | Purpose |
-|------|---------|
-| `src/` | Bun server (`server.ts`: `createSession`, `confirmPayment`) + `utils/server-utils.ts` (shared helpers) + static `web/` |
-| `scripts/` | `start.sh`, `setup-hosts.sh`, `ensure-certs.sh`, `dotenv.sh` |
-| `certs/` | `cert.pem` and `key.pem` for HTTPS (Caddy) |
-| `docker/` | `Dockerfile`, `docker-compose.yml`, generated `Caddyfile.docker.auto` |
+**1. Prerequisites**
 
-## Quick start
+Install **Docker** with **Compose v2** (the `docker compose` plugin).
 
-1. Install **Docker** (with Compose v2 — the `docker compose` plugin).
+**2. Configure environment**
 
-2. **`.env`** lives in the **project root** (same folder as this README). Create it if missing, or edit the one you already have. Set `PRIVATE_API_KEY`, `CHECKOUT_ID`, `PROFILE_ID`, and `CHECKOUT_TYPE` (`form`, `fields`, or `post`). There are **no default IDs** in the server — they must be provided per account.
-   
-   - To run with **HTTP-only** (default): keep `ENABLE_HTTPS=0` and use `http://127.0.0.1:8000`.
-   - To run with **local HTTPS**: set `ENABLE_HTTPS=1` and set `HOST` (comma-separated hostnames, e.g. `www.test.com,test.com`).
+`.env` lives in the **project root** (next to this README). Create or edit it and set:
 
-3. Run:
+- `PRIVATE_API_KEY`
+- `CHECKOUT_ID`
+- `PROFILE_ID`
+- `CHECKOUT_TYPE` — one of `form`, `fields`, or `post`
+
+There are **no default IDs** in the server; values must match your North account.
+
+- **HTTP only (default):** `ENABLE_HTTPS=0` → use `http://127.0.0.1:8000`.
+- **Local HTTPS:** `ENABLE_HTTPS=1` and set `HOST` to comma-separated hostnames (e.g. `www.test.com,test.com`).
+
+**3. Start the app**
 
 ```bash
 chmod +x scripts/start.sh scripts/setup-hosts.sh scripts/ensure-certs.sh
 ./scripts/start.sh
 ```
 
-`./scripts/start.sh` always starts the app on **`http://127.0.0.1:8000`**.
+`./scripts/start.sh` always serves the app at **`http://127.0.0.1:8000`**.
 
-If `ENABLE_HTTPS=1`, it also updates **`/etc/hosts`** when needed (may ask for sudo), generates **`certs/cert.pem`** and **`certs/key.pem`** for every name in `HOST` (prefers **[mkcert](https://github.com/FiloSottile/mkcert)** if installed — runs **`mkcert -install`** so your OS/browser trusts the local CA; otherwise falls back to **openssl** self-signed, which may show a browser warning until you install mkcert or trust the cert yourself). It writes **`docker/Caddyfile.docker.auto`**, then starts Caddy with HTTPS on **443**. If you change `HOST` later, certs are regenerated automatically; to use your own PEMs instead, place them in **`certs/`** and remove **`certs/.generated-for-host`** so the script does not overwrite them.
+**4. HTTPS details (optional)**
 
-4. Open **`http://127.0.0.1:8000/`**. The landing page links to each integration method.
-   
-   If you enabled HTTPS (`ENABLE_HTTPS=1`), you can also open **`https://<first-host-in-HOST>/`** (e.g. `https://www.test.com/`).
+When `ENABLE_HTTPS=1`, the script may update **`/etc/hosts`** (sudo), generate **`certs/cert.pem`** and **`certs/key.pem`** for every name in `HOST` (prefers **[mkcert](https://github.com/FiloSottile/mkcert)** if installed—including `mkcert -install` so your OS trusts the local CA; otherwise falls back to **openssl** self-signed certs, which may trigger browser warnings until you trust them). It writes **`docker/Caddyfile.docker.auto`** and starts Caddy with HTTPS on **443**. If you change `HOST`, certs are regenerated. To use your own PEMs, put them in **`certs/`** and remove **`certs/.generated-for-host`** so the script does not overwrite them.
 
-### Sample routes (one folder per method)
+**5. Open in the browser**
 
-- **Form**: `http://127.0.0.1:8000/form/` (or `https://<host>/form/` with `ENABLE_HTTPS=1`)
-- **Fields**: `http://127.0.0.1:8000/fields/` (or `https://<host>/fields/` with `ENABLE_HTTPS=1`)
-- **Direct Post**: `http://127.0.0.1:8000/post/` (or `https://<host>/post/` with `ENABLE_HTTPS=1`)
-- **Completion (server-verified)**: `http://127.0.0.1:8000/complete/` (or `https://<host>/complete/` with `ENABLE_HTTPS=1`)
+- Default: **`http://127.0.0.1:8000/`** — landing page links each integration.
+- With HTTPS: **`https://<first-host-in-HOST>/`** (e.g. `https://www.test.com/`).
 
-The landing page `/` links to each method so developers can jump straight to the integration they care about.
 
----
+## Get support
 
-**Port 443 in use:** `sudo lsof -nP -iTCP:443 -sTCP:LISTEN` — something else must release 443 (e.g. host Caddy you ran with `sudo`: **`sudo killall caddy`**). Then `./scripts/start.sh` again.
+For North product and API questions, [contact Sales Engineering](https://developer.north.com/contact) or your usual North support channels.
 
-**API:**
-
-- `POST /api/session` → **guide Step 1** (`createSession`): returns North session JSON (includes `token`). For Direct Post, an empty body is allowed.
-- `POST /api/complete` → **guide Step 5** (`confirmPayment`): North session status fetch + redacted client-payload logging for `/complete/`.
+If you find a bug in this sample, open an issue on this repository.
