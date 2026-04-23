@@ -1,8 +1,8 @@
 /**
  * North Embedded Checkout — server-side guide steps implemented here:
  *
- * - Step 1: Create a Checkout Session → `POST /api/session` (`createSession`)
- * - Step 5: Verify payment completion (session status) → inside `confirmPayment` (`POST /api/complete`; do not call North from browser JS)
+ * - Step 2: Create a Checkout Session → `POST /api/session` (`createSession`)
+ * - Step 6: Handle checkout completion / payment response (session status) → inside `confirmPayment` (`POST /api/complete`; do not call North from browser JS)
  */
 import { join } from "node:path";
 import { serveStaticFile, tlsFromEnv } from "./utils/static-serve";
@@ -19,7 +19,7 @@ const port = Number(process.env.PORT) || 8000;
 const tls = tlsFromEnv();
 
 /**
- * Step 1 — Create a Checkout Session
+ * Step 2 — Create a Checkout Session
  *
  * `POST /api/session` — browser calls this; server calls North with `PRIVATE_API_KEY`.
  *
@@ -138,7 +138,7 @@ async function createSession(req: Request): Promise<Response> {
 }
 
 /**
- * Step 5 — Confirm payment (sample: `POST /api/complete` for `/complete/` page)
+ * Step 6 — Handle completion / payment response (sample: `POST /api/complete` for `/complete/` page)
  *
  * Calls North’s session **status** endpoint for authoritative Approved/Declined (do not call that
  * URL from browser JS). Optionally logs a redacted copy of the client-side payment result for

@@ -2,17 +2,19 @@
  * Embedded Checkout Form — code steps align to:
  * https://developer.north.com/products/online/embedded-checkout/form-integration-guide
  *
- * Step 1: Create a Checkout Session (server-side)
+ * Step 1 (Create Checkout and Get Credentials) is done in the North dashboard, not in code.
+ *
+ * Step 2: Create a Checkout Session (server-side)
  * - This sample calls our backend `/api/session`, which uses your PRIVATE_API_KEY to create
  *   a North session and returns `{ token, ... }` to the browser.
  *
- * Step 2: Add the Checkout Script
+ * Step 3: Add the Checkout Script
  * - Done in `index.html` via `<script src="https://checkout.north.com/checkout.js"></script>`.
  *
- * Step 3: Render the Checkout Form
+ * Step 4: Render the Checkout Form
  * - Call `checkout.mount(sessionToken, containerId)`.
  *
- * Step 5: Handle Checkout Completion
+ * Step 6: Handle Checkout Completion
  * - This sample stores the token and redirects to `/complete/` where the server verifies
  *   the session status (do not call North status endpoints from the browser).
  */
@@ -50,7 +52,7 @@ async function mountCheckoutForm() {
       location.href = "/complete/";
     };
 
-    // Step 1 (client -> server): Create a Checkout Session
+    // Step 2 (client -> server): Create a Checkout Session
     const response = await fetch("/api/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -92,7 +94,7 @@ async function mountCheckoutForm() {
     const sessionToken = data.token;
     if (!sessionToken) throw new Error("No token in session response: " + text.slice(0, 300));
 
-    // Step 5: Handle Checkout Completion (store token for `/complete/`)
+    // Step 6: Handle Checkout Completion (store token for `/complete/`)
     try {
       sessionStorage.setItem("north_session_token", sessionToken);
     } catch {
@@ -112,7 +114,7 @@ async function mountCheckoutForm() {
       northWarnIfOriginMismatch(sessionToken);
     }
 
-    // Step 3: Render the Checkout Form
+    // Step 4: Render the Checkout Form
     await Promise.race([
       checkout.mount(sessionToken, "checkout-container"),
       new Promise((_, reject) =>

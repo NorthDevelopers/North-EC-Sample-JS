@@ -2,25 +2,27 @@
  * Embedded Checkout Fields — code steps align to:
  * https://developer.north.com/products/online/embedded-checkout/fields-integration-guide
  *
- * Step 1: Create a Checkout Session (server-side)
+ * Step 1 (Create Checkout and Get Credentials) is done in the North dashboard, not in code.
+ *
+ * Step 2: Create a Checkout Session (server-side)
  * - This sample calls `/api/session` to create a North session and receive a token.
  *
- * Step 2: Add the Checkout Script
+ * Step 3: Add the Checkout Script
  * - Done in `index.html`.
  *
- * Step 3: Mount the Payment Fields
+ * Step 4: Mount the Payment Fields
  * - `checkout.mount(sessionToken, mountElementId)`
  *
- * Step 4: Submit the Payment
+ * Step 5: Submit the Payment
  * - `checkout.submit()` (requires fields are mounted)
  *
- * Step 5: Handle the Payment Response
+ * Step 6: Handle the Payment Response
  * - After client response, redirect to `/complete/` for server-side verification.
  */
 
 let sessionToken = null;
 
-// Step 1: Create a Checkout Session (client -> server)
+// Step 2: Create a Checkout Session (client -> server)
 async function createSession() {
   const response = await fetch("/api/session", {
     method: "POST",
@@ -69,19 +71,19 @@ async function boot() {
     // ignore
   }
 
-  // Step 3: Mount the Payment Fields
+  // Step 4: Mount the Payment Fields
   await checkout.mount(sessionToken, "fields-container");
 
   pay.addEventListener("click", async () => {
     out.textContent = "Submitting…";
     try {
-      // Step 4: Submit the Payment
+      // Step 5: Submit the Payment
       if (typeof checkout.submit !== "function") {
         throw new Error("checkout.submit() is not available for this checkout type/config.");
       }
       const resp = await checkout.submit();
 
-      // Step 5: Handle the Payment Response (client-side)
+      // Step 6: Handle the Payment Response (client-side)
       out.textContent = JSON.stringify(resp, null, 2);
       try {
         sessionStorage.setItem("north_client_response", JSON.stringify(resp));

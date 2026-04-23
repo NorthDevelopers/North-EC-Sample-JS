@@ -29,9 +29,10 @@ The [Form](https://developer.north.com/products/online/embedded-checkout/form-in
 
 | Guide step | What it is | In this repo |
 |------------|------------|--------------|
-| **Step 1 — Create a Checkout Session** | Server calls North with your private key; returns a short-lived token | `src/server.ts` → `createSession` → `POST /api/session` |
-| **Steps 2–4 (varies)** | Load `checkout.js`, mount fields/form, submit / send payment | `src/web/form/`, `src/web/fields/`, `src/web/post/` (see comments in each `*.js` / `index.html`) |
-| **Step 5 — Verify payment / completion** | Server calls North session **status** (do not call from browser JS) | `src/server.ts` → `confirmPayment` (`POST /api/complete`) |
+| **Step 1 — Create Checkout and Get Credentials** | Done in the North dashboard (Checkout Designer); not a code step | `.env` holds the resulting `PRIVATE_API_KEY`, `CHECKOUT_ID`, `PROFILE_ID` |
+| **Step 2 — Create a Checkout Session** | Server calls North with your private key; returns a short-lived token | `src/server.ts` → `createSession` → `POST /api/session` |
+| **Steps 3–5 (varies)** | Load `checkout.js`, mount/build form, submit / send payment | `src/web/form/`, `src/web/fields/`, `src/web/post/` (see comments in each `*.js` / `index.html`) |
+| **Step 6 — Handle completion / payment response** | Server calls North session **status** (do not call from browser JS) | `src/server.ts` → `confirmPayment` (`POST /api/complete`) |
 | **Sample completion flow** | `/complete/` asks the server to verify and show JSON | `src/web/complete/` → `POST /api/complete` → `confirmPayment` in `src/server.ts` |
 | **Shared browser helpers** | Request ID badge, digit cleanup, origin warning | `src/web/assets/` (`session-ui.js`, `helpers.js`, `session-meta.css`) |
 | **Shared server helpers** | Env, JSON helpers, redaction for logs | `src/utils/server-utils.ts` |

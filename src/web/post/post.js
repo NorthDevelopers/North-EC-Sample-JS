@@ -2,25 +2,27 @@
  * Embedded Checkout Direct Post — code steps align to:
  * https://developer.north.com/products/online/embedded-checkout/post-integration-guide
  *
- * Step 1: Create a Checkout Session (server-side)
+ * Step 1 (Create Checkout and Get Credentials) is done in the North dashboard, not in code.
+ *
+ * Step 2: Create a Checkout Session (server-side)
  * - This sample calls `/api/session` to create a North session and get a token.
  *
- * Step 2: Add the Checkout Script
+ * Step 3: Add the Checkout Script
  * - Done in `index.html`.
  *
- * Step 3: Build Your Payment Form
+ * Step 4: Build Your Payment Form
  * - This page collects raw card input fields.
  *
- * Step 4: Submit the Payment
+ * Step 5: Submit the Payment
  * - `checkout.sendPayment(sessionToken, paymentRequest)`
  *
- * Step 5: Handle the Payment Response
+ * Step 6: Handle the Payment Response
  * - Redirect to `/complete/` for server-side verification.
  *
  * IMPORTANT: This method increases PCI scope because raw PAN/CVV touch your page.
  */
 
-// Step 1: Create a Checkout Session (client -> server)
+// Step 2: Create a Checkout Session (client -> server)
 async function createSession({ amount }) {
   const response = await fetch("/api/session", {
     method: "POST",
@@ -51,7 +53,7 @@ async function boot() {
     );
   }
 
-  // Step 4: Submit the Payment
+  // Step 5: Submit the Payment
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     out.textContent = "Submitting…";
@@ -100,7 +102,7 @@ async function boot() {
         // ignore
       }
 
-      // Step 5: Handle the Payment Response -> verify server-side
+      // Step 6: Handle the Payment Response -> verify server-side
       location.href = "/complete/";
     } catch (err) {
       out.textContent = String(err && err.message ? err.message : err);
