@@ -81,6 +81,9 @@ async function createSession(req: Request): Promise<Response> {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${privateKey}`,
+        "Accept-Language": "en",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "User-Agent": "Embedded Checkout",
       },
       body: northBody,
       signal: ctrl.signal,
@@ -187,6 +190,9 @@ async function confirmPayment(req: Request): Promise<Response> {
           SessionToken: token,
           CheckoutId: checkoutId,
           ProfileId: profileId,
+          "Accept-Language": "en",
+          "Accept-Encoding": "gzip, deflate, br, zstd",
+          "User-Agent": "Embedded Checkout",
         },
         signal: ctrl.signal,
       });
