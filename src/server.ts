@@ -238,13 +238,37 @@ Bun.serve({
   tls,
   async fetch(req) {
     const url = new URL(req.url);
+    let res: Response;
+
     if (url.pathname === "/api/session" && req.method === "POST") {
-      return createSession(req);
+      res = await createSession(req);
+    } else if (url.pathname === "/api/complete" && req.method === "POST") {
+      res = await confirmPayment(req);
+    } else {
+      res = await serveStaticFile(webRoot, url.pathname);
     }
-    if (url.pathname === "/api/complete" && req.method === "POST") {
-      return confirmPayment(req);
+
+    if (
+      url.pathname.startsWith("/api/session") ||
+      url.pathname.startsWith("/api/complete") ||
+      url.pathname.includes("webhook")
+    ) {
+      const newHeaders = new Headers(res.headers);
+      const currentCacheControl = newHeaders.get("Cache-Control") || "";
+      if (!currentCacheControl.includes("no-store")) {
+        newHeaders.set(
+          "Cache-Control",
+          currentCacheControl ? `${currentCacheControl}, no-store` : "no-store",
+        );
+      }
+      return new Response(res.body, {
+        status: res.status,
+        statusText: res.statusText,
+        headers: newHeaders,
+      });
     }
-    return serveStaticFile(webRoot, url.pathname);
+
+    return res;
   },
 });
 
